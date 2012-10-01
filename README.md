@@ -1,4 +1,4 @@
 py-lightstreamer-lite
 =====================
 
-python lightstreamer client
+a minimal python lightstreamer client, not yet suitable for any purpose
