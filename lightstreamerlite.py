@@ -7,15 +7,15 @@ subscribe_mandatory_keys = ["LS_id","LS_mode","LS_schema"]
 subscribe_allowed_keys = subscribe_mandatory_keys[:] + ["LS_snapshot", "LS_selector", "LS_data_adapter", "LS_requested_buffer_size", "LS_requested_max_frequency"]
 
 class Session(object):
-    _table = 0
-    _table_callbacks = {}
-    _session_id = None
-
     def __init__(self, host, callback, **kwargs):
+        self._table = 0
+        self._table_callbacks = {}
+        self._session_id = None
+        self._connect_args = kwargs
+
         self._host = host
-        self._on_create = callback
+        self._on_connect = callback
         self._validate_params(kwargs, connect_mandatory_keys, connect_allowed_keys)
-        self._create(**kwargs)
 
     def _validate_params(self, params, mandatory_keys, allowed_keys):
         for key in mandatory_keys:
@@ -25,11 +25,11 @@ class Session(object):
             if key not in allowed_keys:
                 raise Exception("%s is not allowed" % key)
 
-    def _create(self, **kwargs):
+    def _connect(self, **kwargs):
         create_params = kwargs
-        create_params['LS_polling'] = True
-        create_params['LS_polling_millis'] = 5000
         r = requests.post('%s/create_session.txt' % self._host, data=create_params, prefetch=False)
+        if r.status_code != 200:
+            raise Exception("Received status code: %d when attempting to connect" % r.status_code)
         line_number = 0
         for line in r.iter_lines(chunk_size=1):
             if line:
@@ -46,23 +46,7 @@ class Session(object):
                     new_session_id = line.strip().split(":")[1]
                     print "Got SessionId: %s" % new_session_id
                     self._session_id = new_session_id
-                    self._on_create(self)
-                    continue
-                print "Got: %s" % line
-
-    def _bind(self):
-        bind_params = {}
-        bind_params['LS_session'] = self._session_id
-        r = requests.post('%s/bind_session.txt' % self._host, data=bind_params, prefetch=False)
-        line_number = 0
-        for line in r.iter_lines(chunk_size=1):
-            if line:
-                line_number += 1
-                #print "Debug: line %d is: %s" % (line_number, line)
-                if line_number == 1:
-                    if not line.startswith('OK'):
-                        raise Exception("Not OK: failed to create session")
-                    print "Got OK"
+                    self._on_connect(self)
                     continue
                 if line.startswith("PROBE"):
                     continue
@@ -91,4 +75,4 @@ class Session(object):
             print "reply from control: %s" % line
 
     def run_forever(self):
-        self._bind()
+        self._connect(**self._connect_args)
