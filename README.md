@@ -13,7 +13,7 @@ On the plus side:
 - it doesn't impose a concurrency model on clients: see examples for running multiple sessions with gevent, multiprocessing or threading
 
 To get started:
-- please see the [examples](./py-lightstreamer-lite/tree/master/examples) directory
+- please see the [examples](https://github.com/dannyclark/py-lightstreamer-lite/tree/master/examples) directory
 - create a session, create subscriptions in a callback (so lightstreamerlite doesn't attempt to subscribe before it has a session id)
 - run session.run_forever() if all you need is a single session and all your processing can be event-driven
 - look at the concurrency options (I recommend gevent) if you need more than one session, or for any processing which isn't entirely event-driven
