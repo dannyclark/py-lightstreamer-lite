@@ -4,7 +4,7 @@ connect_mandatory_keys = ["LS_user", "LS_adapter_set"]
 connect_allowed_keys = connect_mandatory_keys[:] + ["LS_password", "LS_requested_max_bandwidth", "LS_content_length", "LS_keepalive_millis"]
 
 subscribe_mandatory_keys = ["LS_id","LS_mode","LS_schema"]
-subscribe_allowed_keys = subscribe_mandatory_keys[:] + ["LS_snapshot", "LS_selector", "LS_data_adapter", "LS_requested_buffer_size", "LS_requested_max_frequency"]
+subscribe_allowed_keys = subscribe_mandatory_keys[:] + ["LS_snapshot", "LS_selector", "LS_data_adapter", "LS_requested_buffer_size", "LS_requested_max_frequency","LS_snapshot_length"]
 
 class Session(object):
     def __init__(self, host, callback, **kwargs):
@@ -37,7 +37,7 @@ class Session(object):
                 #print "Debug: line %d is: %s" % (line_number, line)
                 if line_number == 1:
                     if not line.startswith('OK'):
-                        raise Exception("Not OK: failed to create session")
+                        raise Exception("Not OK: failed to create session - %s " % line)
                     print "Got OK"
                     continue
                 if line_number == 2:
@@ -49,6 +49,9 @@ class Session(object):
                     self._on_connect(self)
                     continue
                 if line.startswith("PROBE"):
+                    continue
+                if "EOS" in line:
+                    print "Got EOS: %s" % line
                     continue
                 if ":" not in line: # not a header line
                     values = line.split('|')
